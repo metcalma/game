@@ -1,44 +1,60 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <meta http-equiv="Content-Type" content="text/html;charset=utf-8" >
-            <title>Game</title>
+<head>
 
-            <script type="x-shader/x-vertex" id="vertex-shader">
-               attribute vec4 myPosition;
-               uniform vec2 myScale;
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8" >
+      <title>Lab 2</title>
 
-               void main() {
-                   // point size is 10.0 (not relevant here)
-                   gl_PointSize = 10.0;
-                   gl_Position.x = myPosition.x * myScale.x;
-                   gl_Position.y = myPosition.y * myScale.y;
-                   gl_Position.z = 0.0;
-                   gl_Position.w = 1.0;
-               }
+      <script type="x-shader/x-vertex" id="vertex-shader">
 
-            </script>
+          attribute vec4 myPosition;
+          uniform float theta;
+          uniform vec2 coordinates;
 
-            <script type="x-shader/x-fragment" id="fragment-shader">
-                precision mediump float;
+          void main() {
+            gl_PointSize = 1.0;
 
-                uniform vec4 myUniformColor;
-                void main() {
+            float xi = myPosition.x;
+            float yi = myPosition.y;
 
-                    gl_FragColor = myUniformColor;
+            float xf = xi * cos(theta) + yi * sin(theta);
+            float yf = -xi * sin(theta) + yi * cos(theta);
+            float xn = xf + coordinates.x;
+            float yn = yf + coordinates.y;
 
-                }
+            gl_Position.x = xn;
+            gl_Position.y = yn;
+            gl_Position.z = 0.0;
+            gl_Position.w = 1.0;
+          }
 
-            </script>
-            <script type="text/javascript" src="Common/webgl-utils.js"></script>
-            <script type="text/javascript" src="Common/initShaders.js"></script>
-            <script type="text/javascript" src="Common/MV.js"></script>
-            <script type="text/javascript" src="game.js"></script>
+      </script>
+
+
+      <script type="x-shader/x-fragment" id="fragment-shader">
+
+          void main() {
+              gl_FragColor = vec4( 0.9, 0.3, 0.0, 1.0 );
+          }
+
+      </script>
+
+      <script type="text/javascript" src="Common/webgl-utils.js"></script>
+      <script type="text/javascript" src="Common/initShaders.js"></script>
+      <script type="text/javascript" src="Common/MV.js"></script>
+      <script type="text/javascript" src="game.js"></script>
+
     </head>
 
-    <body onload="init()">
-        <canvas id="gl-canvas" width="512" height="512">
-            Sorry cannot see canvas.
+    <body onload="init();" onkeydown="moveShapeKeys(event);">
+        <canvas id="gl-canvas" width="512" height="512" onclick="moveShape(event);">
         </canvas>
+        <button id="startRot" onclick="newPos();">
+            Move
+        </button>
+        <button id="startRot" onclick="startRotate();">
+            Reset
+        </button>
     </body>
+
 </html>

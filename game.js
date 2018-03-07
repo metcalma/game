@@ -1,65 +1,222 @@
-var canvas;
 var gl;
 var myShaderProgram;
+var rotating;
+var thetaVal;
+var thetaUniform;
+var clipX;
+var clipY;
+var bufferId;
+var coordinatesUniform;
+var speed;
+var direcion = 0;
+var move;
+var cx;
+var cy;
 
 function init() {
-    canvas = document.getElementById("gl-canvas"); // set up the canvas
-    gl = WebGLUtils.setupWebGL(canvas); // set up the WebGL context
 
-    if ( !gl ) {
-        alert( "WebGL is not available." );
+  rotating = 0;
+    // set up the canvas
+    var canvas = document.getElementById("gl-canvas");
+
+    // get the WebGL context
+    gl = WebGLUtils.setupWebGL(canvas);
+
+    // set up the viewport
+    gl.viewport( 0, 0, 512, 512 );
+
+    // set up the color to refresh the screen
+    gl.clearColor( 0.5, 0.0, 0.1, 1.0 );
+
+    myShaderProgram = initShaders( gl, "vertex-shader", "fragment-shader");
+    gl.useProgram(myShaderProgram);
+
+    thetaVal = 0.1;
+    thetaUniform = gl.getUniformLocation(myShaderProgram, "theta");
+    gl.uniform1f(thetaUniform, thetaVal);
+
+    coordinatesUniform = gl.getUniformLocation(myShaderProgram, "coordinates");
+
+    clipX = 0.0;
+    clipY = 0.0;
+    move = 1;
+    speed = 0.005;
+
+    gl.uniform2f(coordinatesUniform, 0.0, 0.0);
+
+    drawShape();
+
+    render();
+}
+
+//random number between 1-10
+function randNum(){
+  var rand = Math.floor(Math.random() * 99);
+  return rand;
+}
+
+function newPos(){
+  cx = window.randNum();
+  //cy = window.randNum();
+
+  console.log(cx);
+  //console.log(cy);
+
+  moveShape();
+}
+
+function drawShape() {
+
+    // set up points
+    var p0 = vec2(  0.1, 0.1 );
+    var p1 = vec2(  0.3, 0.0 );
+    var p2 = vec2(  0.1, -0.1 );
+    var p3 = vec2(  0.0, -0.3 );
+    var p4 = vec2( -0.1,-0.1 );
+    var p5 = vec2( -0.3, 0.0 );
+    var p6 = vec2( -0.1, 0.1 );
+    var p7 = vec2( 0.0, 0.3 );
+
+    // create array
+    var arr = [p0, p1, p2, p3, p4, p5, p6, p7];
+
+    var bufferId = gl.createBuffer(); // make buffer variable
+    gl.bindBuffer( gl.ARRAY_BUFFER, bufferId ); // associate variable with target
+    gl.bufferData( gl.ARRAY_BUFFER, flatten(arr), gl.STATIC_DRAW ); // send data to target
+
+    var myPositionAttrib = gl.getAttribLocation( myShaderProgram,"myPosition" );
+    gl.vertexAttribPointer( myPositionAttrib, 2, gl.FLOAT, false, 0, 0 );
+    gl.enableVertexAttribArray( myPositionAttrib );
+
+
+}
+
+function moveShape(event){
+
+    clipX = 2 * cx / 512.0 - 1.0;
+    clipY = -(2 * cy / 512.0 - 1.0);
+
+    gl.uniform2f(coordinatesUniform, clipX, clipY);
+
+}
+
+function moveShapeKeys(event){
+    var theKeyCode = event.keyCode;
+    if (theKeyCode == 65)
+    {
+        move = 0;
     }
-    gl.viewport( 0, 0, 512, 512 ); // set up the viewport
-    gl.clearColor( 1.0, 0.0, 0.0, 1.0 ); // assign a background color
-    gl.clear( gl.COLOR_BUFFER_BIT );
-
-    myShaderProgram = initShaders( gl, "vertex-shader", "fragment-shader" );
-    gl.useProgram( myShaderProgram ); // set up the shader program
-    drawShapes();
+    else if (theKeyCode == 68)
+    {
+        move = 1;
+    }
+    else if (theKeyCode == 83)
+    {
+        move = 2;
+    }
+    else if (theKeyCode == 87)
+    {
+        move = 3;
+    }
+    gl.uniform2f(coordinatesUniform, clipX, clipY);
 }
 
-function newShape(){
-  var size = Math.ceil(Math.random()*20);
-  console.log(size);
+function increaseSpeed(event){
+  speed = speed + .001;
+}
+function decreaseSpeed(event){
+  speed = speed - .001;
 }
 
-// make a few set shapes, use random number to pick which one to use and then p
-function drawShapes() {
-    var point0 = vec2( 0.0, 0.0 ); // set up the points
-    var point1 = vec2( 1.0, 0.0 );
-    var point2 = vec2( 0.0, 1.0 );
+function startRotate()
+{
+    if (rotating == 0)
+    {
+        rotating = 1;
+        window.rotateShape();
+      }
+}
 
-    var pointA = vec2( 0.0, 0.0 );
-    var pointB = vec2( -1.0, 0.0 );
-    var pointC = vec2( -1.0, -1.0 );
-    var pointD = vec2( 0.0, -1.0 );
+function stopRotate()
+{
+  console.log("notRotating");
+    if (rotating == 1)
+    {
+        rotating = 0;
+    }
+}
 
+function rotateShape(){
+  console.log("in rotate square");
 
-    var arrayOfPointsForShapes =
-        [point0, point1, point2, pointA, pointB, pointC, pointD]; // put points in an array
+  if(rotating == 0){
+    window.render();
+    console.log("leaving");
+  }else{
+    if(move == 0){ //left
 
-    var bufferId = gl.createBuffer(); // create the buffer
-    gl.bindBuffer( gl.ARRAY_BUFFER, bufferId ); // bind the buffer
+      clipX = clipX - speed;
 
-    // buffer the data on the GPU
-    gl.bufferData( gl.ARRAY_BUFFER, flatten(arrayOfPointsForShapes), gl.STATIC_DRAW  );
+    }else if(move == 1){//right
 
-    // set myPosition in vertex-shader to iterate over the triangle points
-    var myPosition = gl.getAttribLocation( myShaderProgram, "myPosition" );
-    gl.vertexAttribPointer( myPosition, 2, gl.FLOAT, false, 0, 0 );
-    gl.enableVertexAttribArray( myPosition );
+      clipX = clipX + speed;
 
-    var myUniformColor = gl.getUniformLocation( myShaderProgram, "myUniformColor");
-    var myScale = gl.getUniformLocation( myShaderProgram, "myScale");
+    }else if( move == 2){ //down
 
-    gl.uniform2f( myScale, .5, .5 );
-    gl.uniform4f( myUniformColor, 1.0,1.0,0.,1.0);
-    gl.drawArrays( gl.TRIANGLES, 0, 3 );
+      clipY = clipY - speed;
 
-    gl.uniform2f( myScale, 0.3, 0.3)
-    gl.uniform4f( myUniformColor, 1.0, 0.0, 1.0, 1.0);
-    gl.drawArrays( gl.TRIANGLE_FAN, 3, 4 );
+    }else if (move == 3){///up
+      clipY = clipY + speed;
+    }
 
-    window.newShape();
+    gl.useProgram(myShaderProgram);
 
+    thetaVal = thetaVal + (.01)*rotating;
+
+    gl.uniform1f(thetaUniform, thetaVal);
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, bufferId);
+
+    gl.drawArrays(gl.TRIANGLE_FAN, 0, 8);
+
+    requestAnimFrame(rotateShape);
+  }
+
+}
+
+function render()
+{
+    gl.clear(gl.COLOR_BUFFER_BIT);
+
+    gl.useProgram(myShaderProgram);
+
+    if(rotating == 1){
+        console.log("leaving");
+      //window.rotateShape();
+    }else{
+      if(move == 0){ //left
+
+        clipX = clipX - speed;
+
+      }else if(move == 1){//right
+
+        clipX = clipX + speed;
+
+      }else if( move == 2){ //down
+
+        clipY = clipY - speed;
+
+      }else if (move == 3){///up
+        clipY = clipY + speed;
+      }
+    }
+
+    gl.uniform2f(coordinatesUniform, clipX, clipY);
+    gl.uniform1f(thetaUniform, thetaVal);
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, bufferId);
+
+    gl.drawArrays(gl.TRIANGLE_FAN, 0, 8);
+
+    requestAnimFrame(render);
 }
