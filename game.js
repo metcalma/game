@@ -69,7 +69,6 @@ function init() {
 
     gl.uniform2f(coordinatesUniform, 0.0, 0.0);
 
-  //  drawShape();
     setupPlayer();
     setupEnemies();
 
@@ -78,7 +77,7 @@ function init() {
 }
 
 function setupEnemies(){
-	enemyShaders = initShaders(gl, "enemy-vertex-shader","back-enemy-fragment-shader");
+	enemyShaders = initShaders(gl, "enemy-vertex-shader","enemy-fragment-shader");
 	gl.useProgram(enemyShaders);
 
   var i;
@@ -104,42 +103,14 @@ function setupEnemies(){
     gl.vertexAttribPointer(enemyVecPos, 2, gl.FLOAT, false, 0, 0);
 
 }
-/*
+
 function setupEnemiesBottom(){
-	enemyShaders = initShaders(gl, "enemy-vertex-shader","back-enemy-fragment-shader");
+	enemyShaders = initShaders(gl, "enemy-vertex-shader","enemy-fragment-shader");
 	gl.useProgram(enemyShaders);
 
   var i;
 	var points=[];
-	var step = 2*Math.PI/n;
-  	var j;
-  	var r = .05
-  	for (j = 0 ; j < 10; j++){
-	    var center = [-(Math.random())+j*Math.random(), Math.random()];
-	    points.push(center);
-        enemyPoints.push(center);
-	    for(i = 0 ; i < 2*Math.PI; i+=step){
-	    	points.push(  [
-	    		center[0]+r*Math.cos(i),
-	    		center[1]+r*Math.sin(i)]);
-	    }
-    }
-    enemyBuffer = gl.createBuffer(); // create the buffer
-    gl.bindBuffer( gl.ARRAY_BUFFER, enemyBuffer ); // bind the buffer
-    gl.bufferData( gl.ARRAY_BUFFER, flatten(points), gl.STATIC_DRAW  );
-
-    enemyVecPos = gl.getAttribLocation(enemyShaders, "enemyPosition");
-    gl.vertexAttribPointer(enemyVecPos, 2, gl.FLOAT, false, 0, 0);
-
-}
-*/
-function setupEnemies(){
-	enemyShaders = initShaders(gl, "enemy-vertex-shader","back-enemy-fragment-shader");
-	gl.useProgram(enemyShaders);
-
-  var i;
-	var points=[];
-	var step = 2*Math.PI/n;
+	var step = 2*Math.PI/n2;
   	var j;
   	var r = .05
   	for (j = 0 ; j < 10; j++){
