@@ -1,4 +1,5 @@
 var gl;
+var canvas;
 var myShaderProgram;
 var rotating;
 var thetaVal;
@@ -13,17 +14,41 @@ var move;
 var cx;
 var cy;
 
+var enemyShaders;
+var enemyBuffer;
+var enemyVecPos;
+var enemyPoints = [];
+var numEnemies = 10;
+var n = 100;
+var enemyClip = [0.0,0.0];
+
+var BottomEnemyShaders;
+var BottomEnemyBuffer;
+var BottomEnemyVecPos;
+var BottomEnemyPoints = [];
+var numBottomEnemies = 10;
+var n2 = 100;
+var BottomEnemyClip = [0.0,0.0];
+
+var playerShaders;
+var playerStep = .03;
+var playerClip = 0.0;
+var playerBuffer;
+var playerVectorPos;
+var playerX = 0.0;
+
 function init() {
 
   rotating = 0;
     // set up the canvas
-    var canvas = document.getElementById("gl-canvas");
+    canvas = document.getElementById("gl-canvas");
 
     // get the WebGL context
     gl = WebGLUtils.setupWebGL(canvas);
 
     // set up the viewport
     gl.viewport( 0, 0, 512, 512 );
+
 
     // set up the color to refresh the screen
     gl.clearColor( 0.5, 0.0, 0.1, 1.0 );
@@ -44,17 +69,125 @@ function init() {
 
     gl.uniform2f(coordinatesUniform, 0.0, 0.0);
 
-    drawShape();
+  //  drawShape();
+    setupPlayer();
+    setupEnemies();
 
 
     render();
+}
+
+function setupEnemies(){
+	enemyShaders = initShaders(gl, "enemy-vertex-shader","back-enemy-fragment-shader");
+	gl.useProgram(enemyShaders);
+
+  var i;
+	var points=[];
+	var step = 2*Math.PI/n;
+  	var j;
+  	var r = .05
+  	for (j = 0 ; j < 10; j++){
+	    var center = [-(Math.random())+j*Math.random(), Math.random()];
+	    points.push(center);
+        enemyPoints.push(center);
+	    for(i = 0 ; i < 2*Math.PI; i+=step){
+	    	points.push(  [
+	    		center[0]+r*Math.cos(i),
+	    		center[1]+r*Math.sin(i)]);
+	    }
+    }
+    enemyBuffer = gl.createBuffer(); // create the buffer
+    gl.bindBuffer( gl.ARRAY_BUFFER, enemyBuffer ); // bind the buffer
+    gl.bufferData( gl.ARRAY_BUFFER, flatten(points), gl.STATIC_DRAW  );
+
+    enemyVecPos = gl.getAttribLocation(enemyShaders, "enemyPosition");
+    gl.vertexAttribPointer(enemyVecPos, 2, gl.FLOAT, false, 0, 0);
+
+}
+/*
+function setupEnemiesBottom(){
+	enemyShaders = initShaders(gl, "enemy-vertex-shader","back-enemy-fragment-shader");
+	gl.useProgram(enemyShaders);
+
+  var i;
+	var points=[];
+	var step = 2*Math.PI/n;
+  	var j;
+  	var r = .05
+  	for (j = 0 ; j < 10; j++){
+	    var center = [-(Math.random())+j*Math.random(), Math.random()];
+	    points.push(center);
+        enemyPoints.push(center);
+	    for(i = 0 ; i < 2*Math.PI; i+=step){
+	    	points.push(  [
+	    		center[0]+r*Math.cos(i),
+	    		center[1]+r*Math.sin(i)]);
+	    }
+    }
+    enemyBuffer = gl.createBuffer(); // create the buffer
+    gl.bindBuffer( gl.ARRAY_BUFFER, enemyBuffer ); // bind the buffer
+    gl.bufferData( gl.ARRAY_BUFFER, flatten(points), gl.STATIC_DRAW  );
+
+    enemyVecPos = gl.getAttribLocation(enemyShaders, "enemyPosition");
+    gl.vertexAttribPointer(enemyVecPos, 2, gl.FLOAT, false, 0, 0);
+
+}
+*/
+function setupEnemies(){
+	enemyShaders = initShaders(gl, "enemy-vertex-shader","back-enemy-fragment-shader");
+	gl.useProgram(enemyShaders);
+
+  var i;
+	var points=[];
+	var step = 2*Math.PI/n;
+  	var j;
+  	var r = .05
+  	for (j = 0 ; j < 10; j++){
+	    var center = [-(Math.random())+j*Math.random(), Math.random()];
+	    points.push(center);
+        enemyPoints.push(center);
+	    for(i = 0 ; i < 2*Math.PI; i+=step){
+	    	points.push(  [
+	    		center[0]+r*Math.cos(i),
+	    		center[1]+r*Math.sin(i)]);
+	    }
+    }
+    enemyBuffer = gl.createBuffer(); // create the buffer
+    gl.bindBuffer( gl.ARRAY_BUFFER, enemyBuffer ); // bind the buffer
+    gl.bufferData( gl.ARRAY_BUFFER, flatten(points), gl.STATIC_DRAW  );
+
+    enemyVecPos = gl.getAttribLocation(enemyShaders, "enemyPosition");
+    gl.vertexAttribPointer(enemyVecPos, 2, gl.FLOAT, false, 0, 0);
+
+}
+
+function setupPlayer() {
+	playerShaders = initShaders(gl, "player-vertex-shader","player-fragment-shader");
+	gl.useProgram(playerShaders);
+  var p0 = vec2(  0.08, 0.08 );
+  var p1 = vec2(  0.1, 0.0 );
+  var p2 = vec2(  0.08, -0.08 );
+  var p3 = vec2(  0.0, -0.1 );
+  var p4 = vec2( -0.08,-0.08 );
+  var p5 = vec2( -0.1, 0.0 );
+  var p6 = vec2( -0.08, 0.08 );
+  var p7 = vec2( 0.0, 0.1 );
+
+	var playerPointArray = [p0, p1, p2, p3, p4, p5, p6, p7];
+
+	playerBuffer = gl.createBuffer();
+	gl.bindBuffer(gl.ARRAY_BUFFER, playerBuffer);
+	gl.bufferData(gl.ARRAY_BUFFER, flatten(playerPointArray), gl.STATIC_DRAW);
+
+	playerVectorPos = gl.getAttribLocation(playerShaders, "myPosition");
+	gl.vertexAttribPointer(playerVectorPos, 2, gl.FLOAT, false, 0, 0);
+
 }
 
 /*
 m - mat3
 v - vec2
 */
-
 function transformVec2(m, v){
 	var vt = mat3(v[0], 0, 0,
 				  v[1], 0, 0,
@@ -192,33 +325,41 @@ function stopRotate()
 }
 
 //random number between 1-500
-function randPos(){
-  var rand = Math.floor(Math.random() * 475);
-    console.log("coordinate:" + rand);
+function randPosX(){
+  var rand = Math.floor(Math.random() * 500);
+  return rand;
+
+}
+function randPosY(){
+  var rand = Math.floor(Math.random() * 250);
   return rand;
 
 }
 
 function randDirection(){
   direction = Math.floor(Math.random() * 8);
-  console.log("drection " + direction);
 }
 
 function randNum(){
-  num = Math.floor(Math.random() * 10);
+   num = Math.floor(Math.random() * 10);
   console.log("num " + value);
   return num;
 }
 
 function reset(event){
   cx = 250;
-  cy = 250;
+  cy = 0;
   moveShape();
 }
 
 function newPos(event){
-  cx = window.randPos();
-  cy = window.randPos();
+  cx = randPosX();
+  pOn = randPosX();
+  if(pOn < 250){
+    cy = randPosY();
+  }else{
+    cy = -randPosY();
+  }
   moveShape();
 }
 
@@ -227,8 +368,7 @@ function drawSmallShapes() {
   var numShapes = winndow.randomNum();
   //picShape = window.randNum();
   var pickShape = 0;
-//  if(var i <= numShapes, i++){
-  //  if(pickShape == 0){
+
       var p0 = vec2(  0.01, 0.01 );
       var p1 = vec2(  0.03, 0.00 );
       var p2 = vec2(  0.01,-0.01 );
@@ -237,28 +377,7 @@ function drawSmallShapes() {
       var p5 = vec2( -0.03, 0.00 );
       var p6 = vec2( -0.01, 0.01 );
       var p7 = vec2( 0.00, 0.03 );
-/*  }else if(pickShape == 1){
-    var p0 = vec2(  0.01, 0.01 );
-    var p1 = vec2(  0.03, 0.00 );
-    var p2 = vec2(  0.01,-0.01 );
-    var p3 = vec2(  0.00,-0.03 );
-    var p4 = vec2( -0.01,-0.01 );
-    var p5 = vec2( -0.03, 0.00 );
-    var p6 = vec2( -0.01, 0.01 );
-    var p7 = vec2( 0.00, 0.03 );
-  }*/
-//}
 
-/*
-var p0 = vec2(  0.01, 0.01 );
-var p1 = vec2(  0.03, 0.00 );
-var p2 = vec2(  0.01,-0.01 );
-var p3 = vec2(  0.00,-0.03 );
-var p4 = vec2( -0.01,-0.01 );
-var p5 = vec2( -0.03, 0.00 );
-var p6 = vec2( -0.01, 0.01 );
-var p7 = vec2( 0.00, 0.03 );
-*/
     // create array
     var arr = [p0, p1, p2, p3, p4, p5, p6, p7];
 
@@ -389,43 +508,9 @@ function rotateShape(){
 function render()
 {
     gl.clear(gl.COLOR_BUFFER_BIT);
-
+/*
     gl.useProgram(myShaderProgram);
 
-
-    if(direction == 0){ //left
-
-      clipX = clipX - speed;
-
-    }else if(direction == 1){//right
-
-      clipX = clipX + speed;
-
-    }else if( direction == 2){ //down
-
-      clipY = clipY - speed;
-
-    }else if (direction == 3){///up
-
-      clipY = clipY + speed;
-
-    }else if (direction == 4){//north east
-      clipY = clipY + speed;
-      clipX = clipX + speed;
-
-    }else if (direction == 5){//North west
-      clipY = clipY + speed;
-      clipX = clipX - speed;
-  }else if (direction == 6){//South east
-
-    clipY = clipY - speed;
-    clipX = clipX + speed;
-
-  }else if (direction == 7){//South west
-
-    clipY = clipY - speed;
-    clipX = clipX - speed;
-  }
 
     gl.uniform2f(coordinatesUniform, clipX, clipY);
     gl.uniform1f(thetaUniform, thetaVal);
@@ -434,5 +519,76 @@ function render()
 
     gl.drawArrays(gl.TRIANGLE_FAN, 0, 8);
 
+*/
+    gl.useProgram(playerShaders);
+
+        if(direction == 0){ //left
+
+          clipX = clipX - speed;
+
+        }else if(direction == 1){//right
+
+          clipX = clipX + speed;
+
+        }else if( direction == 2){ //down
+
+          clipY = clipY - speed;
+
+        }else if (direction == 3){///up
+
+          clipY = clipY + speed;
+
+        }else if (direction == 4){//north east
+          clipY = clipY + speed;
+          clipX = clipX + speed;
+
+        }else if (direction == 5){//North west
+          clipY = clipY + speed;
+          clipX = clipX - speed;
+      }else if (direction == 6){//South east
+
+        clipY = clipY - speed;
+        clipX = clipX + speed;
+
+      }else if (direction == 7){//South west
+
+        clipY = clipY - speed;
+        clipX = clipX - speed;
+      }
+
+  	var M = [1,0,0,0,1,0, clipX, clipY, 1];
+  	var Muniform = gl.getUniformLocation(playerShaders, "M");
+  	gl.uniformMatrix3fv(Muniform, false, M); // take as rows: true, take as cols: false
+  	gl.enableVertexAttribArray(playerVectorPos);
+  	gl.bindBuffer(gl.ARRAY_BUFFER, playerBuffer);
+  	gl.vertexAttribPointer(playerVectorPos, 2, gl.FLOAT, false, 0, 0);
+  	gl.drawArrays(gl.TRIANGLE_FAN, 0, 8);
+
+    gl.useProgram(enemyShaders);
+  	M = [1,0,0,0,1,0,enemyClip[0],enemyClip[1],1];
+  	Muniform = gl.getUniformLocation(enemyShaders, "M");
+  	gl.uniformMatrix3fv(Muniform, false, M); // take as rows: true, take as cols: false
+      gl.enableVertexAttribArray( enemyVecPos );
+      gl.bindBuffer(gl.ARRAY_BUFFER, enemyBuffer);
+      gl.vertexAttribPointer(enemyVecPos, 2, gl.FLOAT, false, 0, 0);
+  	for(i = 0 ; i < 10; i++)
+      {
+              gl.drawArrays(gl.TRIANGLE_FAN,i*(n+2),n+2);
+
+  	}
+/*
+    gl.useProgram(BottomEnemyShaders);
+  	M = [1,0,0,0,1,0,BottomEnemyClip[0],BottomEnemyClip[1],1];
+  	Muniform = gl.getUniformLocation(BottomEnemyShaders, "M");
+  	gl.uniformMatrix3fv(Muniform, false, M); // take as rows: true, take as cols: false
+      gl.enableVertexAttribArray( BottomEnemyVecPos );
+      gl.bindBuffer(gl.ARRAY_BUFFER, BottomEnemyBuffer);
+      gl.vertexAttribPointer(BottomEnemyVecPos, 2, gl.FLOAT, false, 0, 0);
+  	for(i = 0 ; i < 10; i++)
+      {
+              gl.drawArrays(gl.TRIANGLE_FAN,i*(n+2),n+2);
+
+  	}
+    */
     requestAnimFrame(render);
 }

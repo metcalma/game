@@ -3,7 +3,7 @@
 <head>
 
   <meta http-equiv="Content-Type" content="text/html;charset=utf-8" >
-      <title>Lab 2</title>
+      <title>Game</title>
 
       <script type="x-shader/x-vertex" id="vertex-shader">
 
@@ -29,15 +29,67 @@
           }
 
       </script>
-
-
-      <script type="x-shader/x-fragment" id="fragment-shader">
+      <script type="x-shader/x-vertex" id="enemy-vertex-shader" >
+          attribute vec4 enemyPosition;
+          uniform mat3 M;
 
           void main() {
-              gl_FragColor = vec4( 0.9, 0.3, 0.0, 1.0 );
-          }
+              gl_PointSize = 1.0;
+              vec3 vi, vf;
 
+              vi.x = enemyPosition.x;
+              vi.y = enemyPosition.y;
+              vi.z = 1.0;
+              vf = M*vi;
+
+              gl_Position.x = vf.x;
+              gl_Position.y = vf.y;
+              gl_Position.z = 0.0;
+              gl_Position.w = 1.0;
+          }
       </script>
+      <script type="x-shader/x-vertex" id="player-vertex-shader" >
+          attribute vec4 myPosition;
+          uniform mat3 M;
+
+          void main() {
+              gl_PointSize = 1.0;
+              vec3 vi, vf;
+
+              vi.x = myPosition.x;
+              vi.y= myPosition.y;
+              vi.z = 1.0;
+              vf = M*vi;
+
+              gl_Position.x = vf.x;
+              gl_Position.y = vf.y;
+              gl_Position.z = 0.0;
+              gl_Position.w = 1.0;
+          }
+      </script>
+
+      <script type="x-shader/x-fragment" id="player-fragment-shader">
+      // Assigns color to drawn geometry
+          void main(){
+              gl_FragColor = vec4(1.0, 1.0, 0.0, 1.0);
+          }
+      </script>
+
+            <script type="x-shader/x-fragment" id="fragment-shader">
+
+                void main() {
+                    gl_FragColor = vec4( 0.9, 0.3, 0.0, 1.0 );
+                }
+
+            </script>
+
+
+            <script type="x-shader/x-fragment" id="back-enemy-fragment-shader">
+            // Assigns color to drawn geometry
+                void main(){
+                    gl_FragColor = vec4(1.0, 1.0, 0.0, 1.0);
+                }
+            </script>
 
       <script type="text/javascript" src="Common/webgl-utils.js"></script>
       <script type="text/javascript" src="Common/initShaders.js"></script>
@@ -52,7 +104,7 @@
         <button id="startRot" onclick="newPos();">
             Move
         </button>
-        <button id="startRot" onclick="reset();">
+        <button id="startRot" onclick="reset();" onclick="clearInterval(myVar)">
             Reset
         </button>
     </body>
